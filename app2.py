@@ -5,6 +5,9 @@ from ultralytics import YOLO
 from PIL import Image
 import pandas as pd
 
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
+import av
+
 # -------------------------------
 # App Config
 # -------------------------------
@@ -65,27 +68,25 @@ if input_mode == "Image":
         st.image(annotated, caption="Detection Result", use_container_width=True)
 
 # ===============================
-# WEBCAM MODE
+# WEBCAM MODE (Streamlit Cloud Compatible)
 # ===============================
 elif input_mode == "Webcam":
-    st.warning("Press STOP in Streamlit to end webcam stream")
+    st.success("✅ Webcam runs in browser (works on Streamlit Cloud also)")
 
-    run = st.checkbox("Start Webcam")
+    class VideoProcessor(VideoProcessorBase):
+        def recv(self, frame):
+            img = frame.to_ndarray(format="bgr24")
 
-    if run:
-        cap = cv2.VideoCapture(0)
-        stframe = st.empty()
+            annotated, _ = detect_frame(img)
 
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if not ret:
-                break
+            return av.VideoFrame.from_ndarray(annotated, format="bgr24")
 
-            annotated, _ = detect_frame(frame)
-            annotated = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
-            stframe.image(annotated, use_container_width=True)
-
-        cap.release()
+    webrtc_streamer(
+        key="product-detection",
+        video_processor_factory=VideoProcessor,
+        media_stream_constraints={"video": True, "audio": False},
+        async_processing=True
+    )
 
 # ===============================
 # VIDEO MODE
@@ -97,7 +98,7 @@ elif input_mode == "Video":
     )
 
     if video_file:
-        tfile = f"temp_video.mp4"
+        tfile = "temp_video.mp4"
         with open(tfile, "wb") as f:
             f.write(video_file.read())
 
