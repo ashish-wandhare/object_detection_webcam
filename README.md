@@ -10,12 +10,3 @@ It supports detection from:
 ✅ Image Upload  
 ✅ Video Upload  
 ✅ Webcam (Browser webcam using `streamlit-webrtc`, works on Streamlit Cloud)
-
----
-
-## 📁 Project Files
-object_detection_webcam/
-│── app2.py
-│── best.pt
-│── requirements.txt
-│── README.md
